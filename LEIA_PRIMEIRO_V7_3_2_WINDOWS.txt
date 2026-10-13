@@ -1,0 +1,12 @@
+EXPRESS’ARTE V7.3.2 — GITHUB COPILOT
+
+1. Extraia o ZIP inteiro para uma pasta nova.
+2. Execute INICIAR_EXPRESSARTE_WINDOWS.bat. A porta preferencial e 8774 (ou outra se ocupada).
+3. Abra Studio, painel direito IA Express’Arte. Selecione GitHub Copilot · SDK oficial.
+4. Para configurar, execute INSTALAR_COPILOT_WINDOWS.bat e siga COPILOT_COMO_CONECTAR.md.
+5. Faça login SOMENTE pelo Copilot CLI oficial do GitHub; não insira senhas/tokens no Studio.
+6. Faça uma pergunta para testar a autorização da conta. Se não tiver SDK ou acesso, mantenha o assistente local.
+7. O Copilot NÃO altera modelos automaticamente; fotos e STLs NÃO são enviados automaticamente.
+
+Quatro pilares preservados: Studio, catálogo, comunidade e calculadora. Dados privados ficam em %LOCALAPPDATA%\ExpressArteStudio\dados.
+NÃO APAGUE essa pasta. Use seu próprio backup antes de fazer alterações grandes.

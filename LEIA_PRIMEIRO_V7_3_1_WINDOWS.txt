@@ -1,0 +1,13 @@
+EXPRESS’ARTE STUDIO V7.3.1 — LEIA PRIMEIRO
+
+1. NÃO ABRA a aba antiga do Chrome que mostra 127.0.0.1:8765. Ela é da V7.2.
+2. Extraia todo este ZIP para uma pasta NOVA (ex.: Documentos\ExpressArte_V7_3_1).
+3. Dê duplo clique em INICIAR_EXPRESSARTE_WINDOWS.bat.
+4. Espere abrir a aba no Chrome, com endereço INICIANDO EM 127.0.0.1:8773 e a biblioteca de 30 formas. Se a porta 8773 estiver ocupada, o servidor escolherá 8774 ou a próxima disponível.
+5. Verifique a etiqueta verde “V7.3.1 confirmada” e o título “Express’Arte Studio V7.3.1”. Se vir outra versão, não prossiga com testes nesse endereço.
+6. Para abrir as formas de novo sem procurar: execute ABRIR_FORMAS_3D_WINDOWS.bat. Este atalho verifica se o servidor é V7.3.1 antes de abrir.
+7. Para problemas de instalação, abra o endereço /diagnostico.html NA MESMA PORTA aberta pelo iniciador.
+
+NÃO APAGUE dados antigos. Seus projetos ficam em %LOCALAPPDATA%\ExpressArteStudio\dados. Faça backup antes de atualizar. A calculadora continua em /calculadora.html, a comunidade em /comunidade.html e o Mesh Doctor em /mesh-doctor.html na mesma porta correta.
+
+IMPORTANTE: 30 formas não são o Blender completo. União booleana real, importação 3MF e geração por IA 360° ainda estão pendentes.

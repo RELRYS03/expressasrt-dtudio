@@ -1,0 +1,12 @@
+EXPRESS'ARTE V7.2.1 - CORREÇÃO DO ERRO 404
+
+1) EXTRAIA TODO O ZIP para uma pasta normal do Windows.
+2) Abra a pasta ExpressArte_Studio_V7_2_1_CORRECAO_404_WINDOWS.
+3) Clique duas vezes em INICIAR_EXPRESSARTE_WINDOWS.bat.
+4) O Chrome deve abrir automaticamente Studio > Blender Pro.
+5) Deixe a janela preta aberta; leia a PORTA exibida nela.
+6) Se abrir o site antigo, procure a nova porta (8766/8767...) na janela.
+7) Para ver versão e detecção Blender use /diagnostico.html na mesma porta.
+8) Para detalhes leia COMO_RESOLVER_ERRO_404.txt.
+
+NAO apague a pasta dados/ de versoes antigas se tiver publicacoes.

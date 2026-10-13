@@ -1,0 +1,32 @@
+EXPRESS’ARTE V7.2.1 — CORREÇÃO DO ERRO 404 NO WINDOWS
+
+POR QUE ACONTECEU:
+A V7.2 possui o arquivo site/studio.html. Se outra versão da Express’Arte já
+estiver na porta 8765, o navegador pode consultar o servidor ANTIGO, que não
+tem esta página. O erro 404 não significa que seu Blender não existe.
+
+SOLUÇÃO MAIS SEGURA:
+1. EXTRAIA TODO O ZIP, sem executar nada de dentro da prévia do compactador.
+2. Abra a pasta ExpressArte_Studio_V7_2_1_CORRECAO_404_WINDOWS.
+3. Dê dois cliques em INICIAR_EXPRESSARTE_WINDOWS.bat.
+4. O servidor escolherá a porta 8765 ou a próxima livre, e abrirá o Studio
+   DIRETAMENTE na aba Blender Pro.
+5. Deixe a janela preta aberta enquanto usa o site.
+6. Opcional: abra ABRIR_STUDIO_BLENDER_WINDOWS.bat para voltar à aba depois.
+7. Para conferir versão e Blender, abra /diagnostico.html na MESMA porta
+   que apareceu na janela do servidor.
+
+EXEMPLO:
+Se o programa disse 'porta 8765 já estava ocupada' e iniciou em 8766,
+use http://127.0.0.1:8766/studio.html#blender — não 8765!
+
+SE O STUDIO ABRIR MAS BLENDER NÃO FOR DETECTADO:
+Execute CONFIGURAR_BLENDER_WINDOWS.bat e informe o caminho blender.exe.
+Depois pare e reinicie o servidor.
+
+SEUS DADOS:
+Não apague dados/ da sua instalação anterior. Este pacote não transfere
+automaticamente suas publicações antigas. Faça backup e use a migração prevista.
+
+VERSÃO: V7.2.1, correção da inicialização e rotas; a geração real depende
+de testar Blender no seu PC e ainda não é uma escultura de foto 360°.
