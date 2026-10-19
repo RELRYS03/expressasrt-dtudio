@@ -26,6 +26,7 @@ import copilot_bridge
 import ollama_bridge
 import codex_bridge
 import hydra_bridge
+import ai3d_bridge
 
 BASE = Path(__file__).resolve().parent
 PUBLIC = BASE / "site"
@@ -359,6 +360,73 @@ class Handler(SimpleHTTPRequestHandler):
         finally:
             COPILOT_LOCK.release()
 
+    def ai3d_hunyuan_submit(self):
+        if not self.check_local_origin():
+            return self.error_json(403, 'Origem não autorizada para AI 3D.')
+        if not self.headers.get('Content-Type', '').lower().startswith('application/json'):
+            return self.error_json(415, 'Envie JSON.')
+        try:
+            size = int(self.headers.get('Content-Length', '-1'))
+        except ValueError:
+            size = -1
+        if not 2 <= size <= 500000:
+            return self.error_json(413, 'Payload acima do limite.')
+        try:
+            request = json.loads(self.rfile.read(size))
+        except (ValueError, json.JSONDecodeError) as exc:
+            return self.error_json(400, str(exc)[:180])
+        try:
+            result = ai3d_bridge.hunyuan_submit(request)
+            return self.respond_json(200, result)
+        except ai3d_bridge.AI3DBackendUnavailable as exc:
+            return self.error_json(503, str(exc))
+        except Exception:
+            logging.exception('Erro inesperado no submit Hunyuan3D')
+            return self.error_json(502, 'Falha inesperada no backend Hunyuan3D-2.')
+
+    def ai3d_hunyuan_status(self, uid: str):
+        if not self.check_local_origin():
+            return self.error_json(403, 'Origem não autorizada para AI 3D.')
+        if not uid or len(uid) > 64:
+            return self.error_json(400, 'UID inválido.')
+        try:
+            result = ai3d_bridge.hunyuan_status(uid)
+            return self.respond_json(200, result)
+        except ai3d_bridge.AI3DBackendUnavailable as exc:
+            return self.error_json(503, str(exc))
+        except Exception:
+            logging.exception('Erro inesperado no status Hunyuan3D')
+            return self.error_json(502, 'Falha inesperada ao consultar status Hunyuan3D-2.')
+
+    def ai3d_pixal3d_submit(self):
+        if not self.check_local_origin():
+            return self.error_json(403, 'Origem não autorizada para AI 3D.')
+        if not self.headers.get('Content-Type', '').lower().startswith('application/json'):
+            return self.error_json(415, 'Envie JSON.')
+        try:
+            size = int(self.headers.get('Content-Length', '-1'))
+        except ValueError:
+            size = -1
+        if not 2 <= size <= 2000:
+            return self.error_json(413, 'Payload acima do limite.')
+        try:
+            request = json.loads(self.rfile.read(size))
+        except (ValueError, json.JSONDecodeError) as exc:
+            return self.error_json(400, str(exc)[:180])
+        image_path = request.get('image_path', '')
+        if not isinstance(image_path, str) or not image_path.strip():
+            return self.error_json(400, 'Campo image_path é obrigatório.')
+        try:
+            result = ai3d_bridge.pixal3d_submit_image(image_path.strip())
+            return self.respond_json(200, result)
+        except ai3d_bridge.AI3DBackendUnavailable as exc:
+            return self.error_json(503, str(exc))
+        except ValueError as exc:
+            return self.error_json(400, str(exc))
+        except Exception:
+            logging.exception('Erro inesperado no submit Pixal3D')
+            return self.error_json(502, 'Falha inesperada no backend Pixal3D.')
+
     def hydra_chat(self):
         if not self.check_local_origin():
             return self.error_json(403, 'Origem não autorizada para o orquestrador Hydra.')
@@ -476,6 +544,15 @@ class Handler(SimpleHTTPRequestHandler):
             return self.codex_chat()
         if urlsplit(self.path).path == '/api/ai/hydra/chat':
             return self.hydra_chat()
+        if urlsplit(self.path).path == '/api/ai3d/status':
+            return self.do_GET()
+        if urlsplit(self.path).path.startswith('/api/ai3d/hunyuan/status/'):
+            uid = urlsplit(self.path).path.split('/')[-1]
+            return self.ai3d_hunyuan_status(uid)
+        if urlsplit(self.path).path == '/api/ai3d/hunyuan/submit':
+            return self.ai3d_hunyuan_submit()
+        if urlsplit(self.path).path == '/api/ai3d/pixal3d/submit':
+            return self.ai3d_pixal3d_submit()
         if urlsplit(self.path).path == '/api/studio/projects':
             return self.write_scene()
         if urlsplit(self.path).path == '/api/blender/medals':
