@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galeria de Modelos 3D · Express'Arte Studio</title>
+<style>
+ :root {
+ --bg: #faf6f0;
+ --surface: #fff8f0;
+ --border: #d4b896;
+ --accent: #6b4226;
+ --accent-hover: #8b5e3c;
+ --text: #3e2723;
+ --text-muted: #795548;
+ --card-shadow: rgba(107, 66, 38, 0.12);
+ }
+ * { margin: 0; padding: 0; box-sizing: border-box; }
+ body {
+ font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+ background: var(--bg);
+ color: var(--text);
+ min-height: 100vh;
+ display: flex;
+ flex-direction: column;
+ }
+ header {
+ background: var(--accent);
+ color: var(--surface);
+ padding: 1.5rem;
+ text-align: center;
+ }
+ header h1 { font-size: 1.6rem; font-weight: 700; }
+ header p { font-size: 0.9rem; opacity: 0.9; margin-top: 0.3rem; }
+ nav {
+ background: var(--surface);
+ border-bottom: 1px solid var(--border);
+ padding: 0.8rem 1.5rem;
+ display: flex;
+ gap: 1rem;
+ justify-content: center;
+ flex-wrap: wrap;
+ }
+ nav a {
+ color: var(--accent);
+ text-decoration: none;
+ font-weight: 600;
+ font-size: 0.9rem;
+ padding: 0.4rem 0.8rem;
+ border-radius: 6px;
+ transition: background 0.2s;
+ }
+ nav a:hover, nav a.active { background: var(--accent); color: var(--surface); }
+ main {
+ flex: 1;
+ max-width: 1200px;
+ width: 100%;
+ margin: 0 auto;
+ padding: 1.5rem;
+ }
+ .filters {
+ display: flex;
+ flex-wrap: wrap;
+ gap: 0.8rem;
+ margin-bottom: 1.5rem;
+ align-items: center;
+ }
+ .filters label {
+ font-size: 0.85rem;
+ font-weight: 600;
+ color: var(--text);
+ }
+ .filters select, .filters input {
+ padding: 0.5rem 0.8rem;
+ border: 1px solid var(--border);
+ border-radius: 8px;
+ background: var(--surface);
+ color: var(--text);
+ font-size: 0.85rem;
+ outline: none;
+ }
+ .filters select:focus, .filters input:focus { border-color: var(--accent); }
+ .grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+ gap: 1.2rem;
+ }
+ .card {
+ background: var(--surface);
+ border: 1px solid var(--border);
+ border-radius: 12px;
+ overflow: hidden;
+ transition: transform 0.2s, box-shadow 0.2s;
+ cursor: pointer;
+ }
+ .card:hover {
+ transform: translateY(-3px);
+ box-shadow: 0 6px 16px var(--card-shadow);
+ }
+ .card-thumb {
+ width: 100%;
+ height: 180px;
+ background: linear-gradient(135deg, #d4b896 0%, #efebe9 100%);
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 3rem;
+ color: var(--accent);
+ }
+ .card-body { padding: 1rem; }
+ .card-title {
+ font-size: 1rem;
+ font-weight: 700;
+ color: var(--text);
+ margin-bottom: 0.3rem;
+ }
+ .card-meta {
+ font-size: 0.8rem;
+ color: var(--text-muted);
+ display: flex;
+ gap: 0.5rem;
+ flex-wrap: wrap;
+ margin-bottom: 0.5rem;
+ }
+ .tag {
+ background: var(--bg);
+ border: 1px solid var(--border);
+ padding: 0.15rem 0.5rem;
+ border-radius: 4px;
+ font-size: 0.75rem;
+ }
+ .pagination {
+ display: flex;
+ justify-content: center;
+ gap: 0.5rem;
+ margin-top: 2rem;
+ }
+ .pagination button {
+ background: var(--surface);
+ border: 1px solid var(--border);
+ color: var(--accent);
+ padding: 0.5rem 1rem;
+ border-radius: 8px;
+ cursor: pointer;
+ font-weight: 600;
+ font-size: 0.85rem;
+ transition: all 0.2s;
+ }
+ .pagination button:hover:not(:disabled) { background: var(--accent); color: var(--surface); }
+ .pagination button.active { background: var(--accent); color: var(--surface); }
+ .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+ .empty-state {
+ text-align: center;
+ padding: 3rem 1rem;
+ color: var(--text-muted);
+ font-size: 1rem;
+ }
+ footer {
+ text-align: center;
+ padding: 1.2rem;
+ font-size: 0.75rem;
+ color: var(--text-muted);
+ border-top: 1px solid var(--border);
+ }
+ @media (max-width: 600px) {
+ header h1 { font-size: 1.2rem; }
+ .filters { flex-direction: column; align-items: stretch; }
+ .grid { grid-template-columns: 1fr; }
+ }
+</style>
+</head>
+<body>
+
+<header>
+ <h1>Galeria de Modelos 3D</h1>
+ <p>Express'Arte Studio · Catálogo Religioso e Artístico</p>
+</header>
+
+<nav>
+ <a href="/index.html">Início</a>
+ <a href="/galeria.html" class="active">Galeria</a>
+ <a href="/rk10.html">RK10 IA</a>
+</nav>
+
+<main>
+ <div class="filters">
+ <label for="filterCategory">Categoria:</label>
+ <select id="filterCategory">
+ <option value="all">Todas</option>
+ <option value="santos">Santos e Imagens Sacras</option>
+ <option value="anjos">Anjos e Querubins</option>
+ <option value="cruzes">Cruzes e Crucifixos</option>
+ <option value="vasos">Vasos e Castiçais</option>
+ <option value="natividade">Natividade e Presépios</option>
+ <option value="decorativo">Decorativo Religioso</option>
+ </select>
+
+ <label for="filterType">Tipo:</label>
+ <select id="filterType">
+ <option value="all">Todos</option>
+ <option value="escultura">Escultura Completa</option>
+ <option value="relevo">Baixo-Relevo</option>
+ <option value="funcional">Funcional / Litúrgico</option>
+ <option value="miniatura">Miniatura</option>
+ </select>
+
+ <label for="filterUse">Uso:</label>
+ <select id="filterUse">
+ <option value="all">Todos</option>
+ <option value="impressao3d">Impressão 3D FDM</option>
+ <option value="resina">Resina / SLA</option>
+ <option value="cnc">CNC / Usinagem</option>
+ <option value="referencia">Referência Visual</option>
+ </select>
+
+ <input type="text" id="searchInput" placeholder="Buscar modelo…" style="flex:1;min-width:150px;">
+ </div>
+
+ <div class="grid" id="modelGrid"></div>
+ <div class="empty-state" id="emptyState" style="display:none;">Nenhum modelo encontrado com os filtros selecionados.</div>
+
+ <div class="pagination" id="pagination"></div>
+</main>
+
+<footer>
+ Express'Arte Studio V7.7 · Galeria de Modelos 3D · RELRYS03
+</footer>
+
+<script>
+(function() {
+ 'use strict';
+
+ // Sample catalog data — replace with real API or JSON file in production
+ const MODELS = [
+ { id: 1, title: 'Nossa Senhora Aparecida', category: 'santos', type: 'escultura', use: 'impressao3d', icon: '🙏' },
+ { id: 2, title: 'Anjo da Guarda Barroco', category: 'anjos', type: 'escultura', use: 'resina', icon: '👼' },
+ { id: 3, title: 'Cruz Processional Ornamentada', category: 'cruzes', type: 'funcional', use: 'impressao3d', icon: '✝️' },
+ { id: 4, title: 'Castiçal Gótico Triplo', category: 'vasos', type: 'funcional', use: 'impressao3d', icon: '🕯️' },
+ { id: 5, title: 'Presépio Completo 7 Peças', category: 'natividade', type: 'escultura', use: 'resina', icon: '⭐' },
+ { id: 6, title: 'São Francisco de Assis', category: 'santos', type: 'escultura', use: 'impressao3d', icon: '🐦' },
+ { id: 7, title: 'Querubim Renascentista', category: 'anjos', type: 'relevo', use: 'cnc', icon: '🪽' },
+ { id: 8, title: 'Crucifixo de Parede Art Déco', category: 'cruzes', type: 'relevo', use: 'impressao3d', icon: '✝️' },
+ { id: 9, title: 'Vaso Litúrgico Romano', category: 'vasos', type: 'funcional', use: 'resina', icon: '🏺' },
+ { id: 10, title: 'Sagrada Família Miniatura', category: 'natividade', type: 'miniatura', use: 'resina', icon: '👨‍👩‍👧' },
+ { id: 11, title: 'Santa Teresinha do Menino Jesus', category: 'santos', type: 'escultura', use: 'impressao3d', icon: '🌹' },
+ { id: 12, title: 'Arcanjo Miguel Combatente', category: 'anjos', type: 'escultura', use: 'resina', icon: '⚔️' },
+ { id: 13, title: 'Cruz Celta Entrelaçada', category: 'cruzes', type: 'relevo', use: 'cnc', icon: '☘️' },
+ { id: 14, title: 'Incensário Cerimonial', category: 'vasos', type: 'funcional', use: 'impressao3d', icon: '💨' },
+ { id: 15, title: 'Menino Jesus de Praga', category: 'natividade', type: 'escultura', use: 'resina', icon: '👶' },
+ { id: 16, title: 'São Bento Medalha', category: 'santos', type: 'miniatura', use: 'impressao3d', icon: '🛡️' },
+ { id: 17, title: 'Anjo Trombeta Celestial', category: 'anjos', type: 'escultura', use: 'resina', icon: '🎺' },
+ { id: 18, title: 'Painel Decorativo Rosácea', category: 'decorativo', type: 'relevo', use: 'cnc', icon: '🌸' },
+ { id: 19, title: 'Suporte para Bíblia Articulado', category: 'decorativo', type: 'funcional', use: 'impressao3d', icon: '📖' },
+ { id: 20, title: 'Virgem Maria Manto Estrelado', category: 'santos', type: 'escultura', use: 'resina', icon: '⭐' },
+ ];
+
+ const ITEMS_PER_PAGE = 8;
+ let currentPage = 1;
+ let filteredModels = [...MODELS];
+
+ const grid = document.getElementById('modelGrid');
+ const emptyState = document.getElementById('emptyState');
+ const paginationEl = document.getElementById('pagination');
+ const filterCategory = document.getElementById('filterCategory');
+ const filterType = document.getElementById('filterType');
+ const filterUse = document.getElementById('filterUse');
+ const searchInput = document.getElementById('searchInput');
+
+ function applyFilters() {
+ const cat = filterCategory.value;
+ const type = filterType.value;
+ const use = filterUse.value;
+ const search = searchInput.value.toLowerCase().trim();
+
+ filteredModels = MODELS.filter(function(m) {
+ if (cat !== 'all' && m.category !== cat) return false;
+ if (type !== 'all' && m.type !== type) return false;
+ if (use !== 'all' && m.use !== use) return false;
+ if (search && !m.title.toLowerCase().includes(search)) return false;
+ return true;
+ });
+
+ currentPage = 1;
+ render();
+ }
+
+ function render() {
+ const start = (currentPage - 1) * ITEMS_PER_PAGE;
+ const pageItems = filteredModels.slice(start, start + ITEMS_PER_PAGE);
+
+ grid.innerHTML = '';
+ if (pageItems.length === 0) {
+ emptyState.style.display = 'block';
+ paginationEl.innerHTML = '';
+ return;
+ }
+ emptyState.style.display = 'none';
+
+ pageItems.forEach(function(m) {
+ const card = document.createElement('div');
+ card.className = 'card';
+ card.innerHTML =
+ '<div class="card-thumb">' + m.icon + '</div>' +
+ '<div class="card-body">' +
+ '<div class="card-title">' + m.title + '</div>' +
+ '<div class="card-meta">' +
+ '<span class="tag">' + getCategoryLabel(m.category) + '</span>' +
+ '<span class="tag">' + getTypeLabel(m.type) + '</span>' +
+ '<span class="tag">' + getUseLabel(m.use) + '</span>' +
+ '</div></div>';
+ grid.appendChild(card);
+ });
+
+ renderPagination();
+ }
+
+ function renderPagination() {
+ const totalPages = Math.ceil(filteredModels.length / ITEMS_PER_PAGE);
+ paginationEl.innerHTML = '';
+ if (totalPages <= 1) return;
+
+ const prevBtn = document.createElement('button');
+ prevBtn.textContent = '← Anterior';
+ prevBtn.disabled = currentPage === 1;
+ prevBtn.addEventListener('click', function() { if (currentPage > 1) { currentPage--; render(); } });
+ paginationEl.appendChild(prevBtn);
+
+ for (let i = 1; i <= totalPages; i++) {
+ const btn = document.createElement('button');
+ btn.textContent = i;
+ if (i === currentPage) btn.className = 'active';
+ btn.addEventListener('click', function() { currentPage = i; render(); });
+ paginationEl.appendChild(btn);
+ }
+
+ const nextBtn = document.createElement('button');
+ nextBtn.textContent = 'Próximo →';
+ nextBtn.disabled = currentPage === totalPages;
+ nextBtn.addEventListener('click', function() { if (currentPage < totalPages) { currentPage++; render(); } });
+ paginationEl.appendChild(nextBtn);
+ }
+
+ function getCategoryLabel(v) {
+ const map = { santos: 'Santos', anjos: 'Anjos', cruzes: 'Cruzes', vasos: 'Vasos', natividade: 'Natividade', decorativo: 'Decorativo' };
+ return map[v] || v;
+ }
+
+ function getTypeLabel(v) {
+ const map = { escultura: 'Escultura', relevo: 'Baixo-Relevo', funcional: 'Funcional', miniatura: 'Miniatura' };
+ return map[v] || v;
+ }
+
+ function getUseLabel(v) {
+ const map = { impressao3d: 'Impressão 3D FDM', resina: 'Resina / SLA', cnc: 'CNC / Usinagem', referencia: 'Referência Visual' };
+ return map[v] || v;
+ }
+
+ filterCategory.addEventListener('change', applyFilters);
+ filterType.addEventListener('change', applyFilters);
+ filterUse.addEventListener('change', applyFilters);
+ searchInput.addEventListener('input', applyFilters);
+
+ // Initial render
+ applyFilters();
+})();
+</script>
+
+</body>
+</html>
