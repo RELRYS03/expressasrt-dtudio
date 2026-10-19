@@ -25,6 +25,7 @@ from blender_bridge import BridgeJobs, blender_status
 import copilot_bridge
 import ollama_bridge
 import codex_bridge
+import hydra_bridge
 
 BASE = Path(__file__).resolve().parent
 PUBLIC = BASE / "site"
@@ -241,6 +242,7 @@ class Handler(SimpleHTTPRequestHandler):
                     {'id': 'github-copilot', 'name': 'GitHub Copilot', **copilot_bridge.status()},
                     {'id': 'ollama-local', 'name': 'Ollama Local', **ollama_bridge.status()},
                     {'id': 'openai-codex', 'name': 'OpenAI Codex', **codex_bridge.status()},
+                    {'id': 'hydra-orchestrator', 'name': 'HydraFusion Orchestrator', 'ok': True, 'provider': 'hydra-multi-model', 'message': 'Orquestrador inteligente que escolhe automaticamente entre Ollama, Copilot e Codex baseado na complexidade da tarefa.'},
                 ],
             })
         if path == '/api/blender/status':
@@ -357,6 +359,54 @@ class Handler(SimpleHTTPRequestHandler):
         finally:
             COPILOT_LOCK.release()
 
+    def hydra_chat(self):
+        if not self.check_local_origin():
+            return self.error_json(403, 'Origem não autorizada para o orquestrador Hydra.')
+        if not self.headers.get('Content-Type', '').lower().startswith('application/json'):
+            return self.error_json(415, 'Envie JSON.')
+        try:
+            size = int(self.headers.get('Content-Length', '-1'))
+        except ValueError:
+            size = -1
+        if not 2 <= size <= 8000:
+            return self.error_json(413, 'Pergunta ou contexto acima do limite de segurança.')
+        try:
+            self.connection.settimeout(20)
+            request = json.loads(self.rfile.read(size))
+            question = request.get('message', '')
+            context = request.get('context', '')
+            history = request.get('history', [])
+            model = request.get('model')
+            if not isinstance(question, str) or not question.strip() or len(question) > 2000:
+                return self.error_json(400, 'Digite uma pergunta válida de até 2000 caracteres.')
+            validated_history = []
+            if isinstance(history, list):
+                for entry in history[:6]:
+                    if isinstance(entry, dict) and entry.get('role') in ('user', 'assistant'):
+                        text = entry.get('text', '')
+                        if isinstance(text, str) and len(text) <= 1500:
+                            validated_history.append((entry['role'], text))
+        except (ValueError, json.JSONDecodeError, TimeoutError, OSError) as exc:
+            return self.error_json(400, str(exc)[:180])
+        try:
+            result = hydra_bridge.run_hydra_chat(
+                message=question.strip(),
+                context=context,
+                history=validated_history,
+                preferred_model=model
+            )
+            return self.respond_json(200, {
+                'ok': True,
+                'provider': 'hydra-orchestrator',
+                'answer': result.get('answer', ''),
+                'provider_used': result.get('provider_used', 'unknown'),
+                'pattern': result.get('pattern', 'unknown'),
+                'complexity_score': result.get('complexity_score', 0.0)
+            })
+        except Exception:
+            logging.exception('Erro inesperado no orquestrador Hydra (sem conteúdo da pergunta)')
+            return self.error_json(502, 'Falha inesperada no orquestrador HydraFusion.')
+
     def codex_chat(self):
         if not self.check_local_origin():
             return self.error_json(403, 'Origem não autorizada para o assistente Codex.')
@@ -424,6 +474,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self.ollama_chat()
         if urlsplit(self.path).path == '/api/ai/codex/chat':
             return self.codex_chat()
+        if urlsplit(self.path).path == '/api/ai/hydra/chat':
+            return self.hydra_chat()
         if urlsplit(self.path).path == '/api/studio/projects':
             return self.write_scene()
         if urlsplit(self.path).path == '/api/blender/medals':
