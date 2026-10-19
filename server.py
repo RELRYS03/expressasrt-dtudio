@@ -23,6 +23,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 from blender_bridge import BridgeJobs, blender_status
 import copilot_bridge
+import ollama_bridge
 
 BASE = Path(__file__).resolve().parent
 PUBLIC = BASE / "site"
@@ -226,6 +227,20 @@ class Handler(SimpleHTTPRequestHandler):
             if not self.check_local_origin():
                 return self.error_json(403, 'Origem não autorizada.')
             return self.respond_json(200, copilot_bridge.status())
+        if path == '/api/ai/ollama/status':
+            if not self.check_local_origin():
+                return self.error_json(403, 'Origem não autorizada.')
+            return self.respond_json(200, ollama_bridge.status())
+        if path == '/api/ai/providers':
+            if not self.check_local_origin():
+                return self.error_json(403, 'Origem não autorizada.')
+            return self.respond_json(200, {
+                'ok': True,
+                'providers': [
+                    {'id': 'github-copilot', 'name': 'GitHub Copilot', **copilot_bridge.status()},
+                    {'id': 'ollama-local', 'name': 'Ollama Local', **ollama_bridge.status()},
+                ],
+            })
         if path == '/api/blender/status':
             return self.respond_json(200, blender_status())
         match = re.fullmatch(r'/api/blender/jobs/([a-f0-9-]{36})', path)
@@ -340,9 +355,41 @@ class Handler(SimpleHTTPRequestHandler):
         finally:
             COPILOT_LOCK.release()
 
+    def ollama_chat(self):
+        if not self.check_local_origin():
+            return self.error_json(403, 'Origem não autorizada para o assistente local.')
+        if not self.headers.get('Content-Type', '').lower().startswith('application/json'):
+            return self.error_json(415, 'Envie JSON.')
+        try:
+            size = int(self.headers.get('Content-Length', '-1'))
+        except ValueError:
+            size = -1
+        if not 2 <= size <= 8000:
+            return self.error_json(413, 'Pergunta ou contexto acima do limite de segurança.')
+        try:
+            self.connection.settimeout(20)
+            request = json.loads(self.rfile.read(size))
+            question, context, history, model = ollama_bridge.validate_payload(request)
+        except (ValueError, json.JSONDecodeError, TimeoutError, OSError) as exc:
+            return self.error_json(400, str(exc)[:180])
+        if not ollama_bridge.available():
+            return self.error_json(503, 'Ollama não está rodando. Instale em https://ollama.com e execute "ollama serve".')
+        try:
+            answer = ollama_bridge.run_prompt(question, context, history, model)
+            return self.respond_json(200, {'ok': True, 'provider': 'ollama-local', 'model': model, 'answer': answer})
+        except ollama_bridge.OllamaModelError as exc:
+            return self.error_json(404, str(exc))
+        except ollama_bridge.OllamaUnavailable as exc:
+            return self.error_json(503, str(exc))
+        except Exception:
+            logging.exception('Erro inesperado na integração Ollama (sem conteúdo da pergunta)')
+            return self.error_json(502, 'Falha inesperada no assistente local.')
+
     def do_POST(self):
         if urlsplit(self.path).path == '/api/ai/copilot/chat':
             return self.copilot_chat()
+        if urlsplit(self.path).path == '/api/ai/ollama/chat':
+            return self.ollama_chat()
         if urlsplit(self.path).path == '/api/studio/projects':
             return self.write_scene()
         if urlsplit(self.path).path == '/api/blender/medals':
