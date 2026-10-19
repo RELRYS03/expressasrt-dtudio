@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Express'Arte Studio · Catálogo Religioso</title>
+<style>
+  :root {
+    --bg: #faf6f0;
+    --surface: #fff8f0;
+    --border: #d4b896;
+    --accent: #6b4226;
+    --accent-hover: #8b5e3c;
+    --text: #3e2723;
+    --text-muted: #795548;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: var(--accent);
+    color: var(--surface);
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+  header h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: 0.5px; }
+  header p { font-size: 1rem; opacity: 0.9; margin-top: 0.5rem; }
+  main {
+    flex: 1;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(107, 66, 38, 0.15);
+  }
+  .card h2 {
+    font-size: 1.2rem;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .card p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+  .card a {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--surface);
+    text-decoration: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  .card a:hover { background: var(--accent-hover); }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+  }
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.4rem; }
+    main { padding: 1.5rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Express'Arte Studio</h1>
+  <p>Catálogo Religioso · Modelagem 3D · IA Integrada</p>
+</header>
+
+<main>
+  <div class="grid">
+    <div class="card">
+      <h2>RK10 Inteligente</h2>
+      <p>Assistente de IA para modelagem 3D, impressão e Blender. Funciona direto no navegador com a API OpenAI — sem backend necessário.</p>
+      <a href="/rk10.html">Abrir RK10 Inteligente</a>
+    </div>
+
+    <div class="card">
+      <h2>Sobre o Express'Arte</h2>
+      <p>Editor 3D focado em arte religiosa e impressão 3D. Crie, edite e exporte modelos para fabricação digital com ferramentas profissionais integradas.</p>
+    </div>
+
+    <div class="card">
+      <h2>Integrações de IA</h2>
+      <p>O Express'Arte Studio suporta três provedores de IA: GitHub Copilot, Ollama Local e OpenAI Codex. Escolha o melhor para cada tarefa.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Express'Arte Studio V7.5 · RELRYS03 · Todos os direitos reservados
+</footer>
+
+</body>
+</html>
