@@ -24,6 +24,7 @@ from urllib.parse import urlsplit
 from blender_bridge import BridgeJobs, blender_status
 import copilot_bridge
 import ollama_bridge
+import codex_bridge
 
 BASE = Path(__file__).resolve().parent
 PUBLIC = BASE / "site"
@@ -239,6 +240,7 @@ class Handler(SimpleHTTPRequestHandler):
                 'providers': [
                     {'id': 'github-copilot', 'name': 'GitHub Copilot', **copilot_bridge.status()},
                     {'id': 'ollama-local', 'name': 'Ollama Local', **ollama_bridge.status()},
+                    {'id': 'openai-codex', 'name': 'OpenAI Codex', **codex_bridge.status()},
                 ],
             })
         if path == '/api/blender/status':
@@ -355,6 +357,36 @@ class Handler(SimpleHTTPRequestHandler):
         finally:
             COPILOT_LOCK.release()
 
+    def codex_chat(self):
+        if not self.check_local_origin():
+            return self.error_json(403, 'Origem não autorizada para o assistente Codex.')
+        if not self.headers.get('Content-Type', '').lower().startswith('application/json'):
+            return self.error_json(415, 'Envie JSON.')
+        try:
+            size = int(self.headers.get('Content-Length', '-1'))
+        except ValueError:
+            size = -1
+        if not 2 <= size <= 8000:
+            return self.error_json(413, 'Pergunta ou contexto acima do limite de segurança.')
+        try:
+            self.connection.settimeout(20)
+            request = json.loads(self.rfile.read(size))
+            question, context, history, model = codex_bridge.validate_payload(request)
+        except (ValueError, json.JSONDecodeError, TimeoutError, OSError) as exc:
+            return self.error_json(400, str(exc)[:180])
+        if not codex_bridge.available():
+            return self.error_json(503, 'Chave OPENAI_API_KEY não configurada. Adicione no arquivo .env do projeto.')
+        try:
+            answer = codex_bridge.run_prompt(question, context, history, model)
+            return self.respond_json(200, {'ok': True, 'provider': 'openai-codex', 'model': model, 'answer': answer})
+        except codex_bridge.CodexUnauthorized as exc:
+            return self.error_json(401, str(exc))
+        except codex_bridge.CodexUnavailable as exc:
+            return self.error_json(503, str(exc))
+        except Exception:
+            logging.exception('Erro inesperado na integração Codex (sem conteúdo da pergunta)')
+            return self.error_json(502, 'Falha inesperada no assistente Codex.')
+
     def ollama_chat(self):
         if not self.check_local_origin():
             return self.error_json(403, 'Origem não autorizada para o assistente local.')
@@ -390,6 +422,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self.copilot_chat()
         if urlsplit(self.path).path == '/api/ai/ollama/chat':
             return self.ollama_chat()
+        if urlsplit(self.path).path == '/api/ai/codex/chat':
+            return self.codex_chat()
         if urlsplit(self.path).path == '/api/studio/projects':
             return self.write_scene()
         if urlsplit(self.path).path == '/api/blender/medals':
