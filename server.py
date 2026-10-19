@@ -29,6 +29,7 @@ import hydra_bridge
 import ai3d_bridge
 import rk10_local
 import minimind_bridge
+import blender_agent_bridge
 
 BASE = Path(__file__).resolve().parent
 PUBLIC = BASE / "site"
@@ -486,6 +487,36 @@ class Handler(SimpleHTTPRequestHandler):
         except Exception:
             logging.exception('Erro inesperado no MiniMind')
             return self.error_json(502, 'Falha interna no assistente MiniMind.')
+    def blender_command(self):
+        if not self.check_local_origin():
+            return self.error_json(403, 'Origem não autorizada para Blender.')
+        if not self.headers.get('Content-Type', '').lower().startswith('application/json'):
+            return self.error_json(415, 'Envie JSON.')
+        try:
+            size = int(self.headers.get('Content-Length', '-1'))
+        except ValueError:
+            size = -1
+        if not 2 <= size <= 4000:
+            return self.error_json(413, 'Payload acima do limite.')
+        try:
+            request = json.loads(self.rfile.read(size))
+        except (ValueError, json.JSONDecodeError) as exc:
+            return self.error_json(400, str(exc)[:180])
+        command = request.get('command', '')
+        params = request.get('params', {})
+        if not isinstance(command, str) or not command.strip():
+            return self.error_json(400, 'Campo "command" é obrigatório.')
+        try:
+            result = blender_agent_bridge.send_command(command.strip(), params)
+            return self.respond_json(200, {'ok': True, 'provider': 'blender-local', 'result': result})
+        except blender_agent_bridge.BlenderUnavailable as exc:
+            return self.error_json(503, str(exc))
+        except RuntimeError as exc:
+            return self.error_json(400, str(exc))
+        except Exception:
+            logging.exception('Erro inesperado no Blender Bridge')
+            return self.error_json(502, 'Falha interna na comunicação com o Blender.')
+
     def rk10_generate(self):
         if not self.check_local_origin():
             return self.error_json(403, 'Origem não autorizada para RK10 Local.')
@@ -659,6 +690,12 @@ class Handler(SimpleHTTPRequestHandler):
             return self.respond_json(200, minimind_bridge.status())
         if urlsplit(self.path).path == '/api/minimind/chat':
             return self.minimind_chat()
+        if path == '/api/blender/status':
+            if not self.check_local_origin():
+                return self.error_json(403, 'Origem não autorizada.')
+            return self.respond_json(200, blender_agent_bridge.status())
+        if urlsplit(self.path).path == '/api/blender/command':
+            return self.blender_command()
         if urlsplit(self.path).path == '/api/studio/projects':
             return self.write_scene()
         if urlsplit(self.path).path == '/api/blender/medals':
