@@ -4,7 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OpenClaude · Express'Arte Studio</title>
-<link rel="stylesheet" href="/openclaude/global.css">
+<style>
+/* Estilos inline para garantir funcionamento sem dependências externas */
+:root { --background: #faf6f0; --foreground: #3e2723; --accent: #6b4226; --accent-strong: #4e2c1b; --surface-rgb: 255, 248, 240; --line: rgba(0,0,0,0.1); }
+body { background: var(--background); color: var(--foreground); font-family: monospace; margin: 0; padding: 0; }
+header { background: var(--accent); color: #faf6f0; padding: 1rem; text-align: center; }
+main { max-width: 1152px; margin: 2rem auto; padding: 0 1rem; }
+.card { background: rgba(var(--surface-rgb), 0.5); border: 1px solid var(--line); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; }
+h1, h2 { color: var(--accent); } a { color: var(--accent-strong); text-decoration: none; } .btn { display: inline-block; background: var(--accent); color: #fff; padding: 0.5rem 1rem; border-radius: 4px; margin-top: 1rem; }
+</style>
 <style>
 /* Ajustes específicos para integração com Express'Arte */
 body { background: var(--background); color: var(--foreground); font-family: 'Geist Mono Variable', monospace; margin: 0; padding: 0; }
