@@ -27,6 +27,8 @@ import ollama_bridge
 import codex_bridge
 import hydra_bridge
 import ai3d_bridge
+import rk10_local
+import minimind_bridge
 
 BASE = Path(__file__).resolve().parent
 PUBLIC = BASE / "site"
@@ -449,6 +451,80 @@ class Handler(SimpleHTTPRequestHandler):
             logging.exception('Erro inesperado no submit Pixal3D')
             return self.error_json(502, 'Falha inesperada no backend Pixal3D.')
 
+    def minimind_chat(self):
+        if not self.check_local_origin():
+            return self.error_json(403, 'Origem não autorizada para MiniMind.')
+        if not self.headers.get('Content-Type', '').lower().startswith('application/json'):
+            return self.error_json(415, 'Envie JSON.')
+        try:
+            size = int(self.headers.get('Content-Length', '-1'))
+        except ValueError:
+            size = -1
+        if not 2 <= size <= 4000:
+            return self.error_json(413, 'Payload acima do limite.')
+        try:
+            request = json.loads(self.rfile.read(size))
+        except (ValueError, json.JSONDecodeError) as exc:
+            return self.error_json(400, str(exc)[:180])
+        question = request.get('message', '')
+        context = request.get('context', '')
+        history = request.get('history', [])
+        if not isinstance(question, str) or not question.strip() or len(question) > 2000:
+            return self.error_json(400, 'Digite uma pergunta válida de até 2000 caracteres.')
+        validated_history = []
+        if isinstance(history, list):
+            for entry in history[:6]:
+                if isinstance(entry, dict) and entry.get('role') in ('user', 'assistant'):
+                    text = entry.get('text', '')
+                    if isinstance(text, str) and len(text) <= 1500:
+                        validated_history.append((entry['role'], text))
+        try:
+            answer = minimind_bridge.run_prompt(question, context, validated_history)
+            return self.respond_json(200, {'ok': True, 'provider': 'minimind-local', 'answer': answer})
+        except minimind_bridge.MiniMindUnavailable as exc:
+            return self.error_json(503, str(exc))
+        except Exception:
+            logging.exception('Erro inesperado no MiniMind')
+            return self.error_json(502, 'Falha interna no assistente MiniMind.')
+    def rk10_generate(self):
+        if not self.check_local_origin():
+            return self.error_json(403, 'Origem não autorizada para RK10 Local.')
+        if not self.headers.get('Content-Type', '').lower().startswith('application/json'):
+            return self.error_json(415, 'Envie JSON.')
+        try:
+            size = int(self.headers.get('Content-Length', '-1'))
+        except ValueError:
+            size = -1
+        if not 2 <= size <= 4000:
+            return self.error_json(413, 'Payload acima do limite.')
+        try:
+            request = json.loads(self.rfile.read(size))
+        except (ValueError, json.JSONDecodeError) as exc:
+            return self.error_json(400, str(exc)[:180])
+        kind = request.get('kind', '')
+        if not isinstance(kind, str) or not kind.strip():
+            return self.error_json(400, 'Campo "kind" é obrigatório (box, cylinder, keyring, star, heart, text).')
+        params = request.get('params', {})
+        if not isinstance(params, dict):
+            return self.error_json(400, 'Campo "params" deve ser um objeto.')
+        try:
+            stl_bytes = rk10_local.generate_shape(kind.strip(), **params)
+        except ValueError as exc:
+            return self.error_json(400, str(exc))
+        except TypeError as exc:
+            return self.error_json(400, f'Parâmetros inválidos para {kind}: {exc}')
+        except Exception:
+            logging.exception('Erro inesperado no gerador RK10 Local')
+            return self.error_json(500, 'Falha interna ao gerar modelo.')
+        filename = f'{kind.strip()}.stl'
+        self.send_response(200)
+        self.send_header('Content-Type', 'model/stl')
+        self.send_header('Content-Length', str(len(stl_bytes)))
+        self.send_header('Content-Disposition', f'attachment; filename="{filename}"')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(stl_bytes)
+
     def hydra_chat(self):
         if not self.check_local_origin():
             return self.error_json(403, 'Origem não autorizada para o orquestrador Hydra.')
@@ -575,6 +651,14 @@ class Handler(SimpleHTTPRequestHandler):
             return self.ai3d_hunyuan_submit()
         if urlsplit(self.path).path == '/api/ai3d/pixal3d/submit':
             return self.ai3d_pixal3d_submit()
+        if urlsplit(self.path).path == '/api/rk10/generate':
+            return self.rk10_generate()
+        if path == '/api/minimind/status':
+            if not self.check_local_origin():
+                return self.error_json(403, 'Origem não autorizada.')
+            return self.respond_json(200, minimind_bridge.status())
+        if urlsplit(self.path).path == '/api/minimind/chat':
+            return self.minimind_chat()
         if urlsplit(self.path).path == '/api/studio/projects':
             return self.write_scene()
         if urlsplit(self.path).path == '/api/blender/medals':
