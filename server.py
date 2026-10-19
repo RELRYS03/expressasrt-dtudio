@@ -271,6 +271,28 @@ class Handler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(data)
             return
+        if path == '/api/ai3d/file':
+            if not self.check_local_origin():
+                return self.error_json(403, 'Origem não autorizada.')
+            from urllib.parse import parse_qs, urlparse
+            qs = parse_qs(urlparse(self.path).query)
+            fpath = qs.get('path', [''])[0]
+            if not fpath or '..' in fpath:
+                return self.error_json(400, 'Caminho inválido.')
+            target = Path(fpath)
+            if not target.is_file():
+                return self.error_json(404, 'Arquivo não encontrado.')
+            try:
+                data = target.read_bytes()
+            except OSError as exc:
+                return self.error_json(500, str(exc)[:200])
+            self.send_response(200)
+            self.send_header('Content-Type', 'model/gltf-binary')
+            self.send_header('Content-Length', str(len(data)))
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if path in ('/api/health', '/api/diagnostico'):
             return self.respond_json(200, {
                 'ok': True, 'product': 'Express’Arte Studio', 'version': '7.3.2',

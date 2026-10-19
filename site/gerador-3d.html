@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador 3D · Express'Arte Studio</title>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/1.12.0/model-viewer.min.js"></script>
+<style>
+:root {
+--bg: #faf6f0;
+--surface: #fff8f0;
+--border: #d4b896;
+--accent: #6b4226;
+--accent-hover: #8b5e3c;
+--text: #3e2723;
+--text-muted: #795548;
+--success: #2e7d32;
+--error: #b71c1c;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+background: var(--bg);
+color: var(--text);
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+}
+header {
+background: var(--accent);
+color: var(--surface);
+padding: 1.5rem;
+text-align: center;
+}
+header h1 { font-size: 1.6rem; font-weight: 700; }
+header p { font-size: 0.9rem; opacity: 0.9; margin-top: 0.3rem; }
+nav {
+background: var(--surface);
+border-bottom: 1px solid var(--border);
+padding: 0.8rem 1.5rem;
+display: flex;
+gap: 1rem;
+justify-content: center;
+flex-wrap: wrap;
+}
+nav a {
+color: var(--accent);
+text-decoration: none;
+font-weight: 600;
+font-size: 0.9rem;
+padding: 0.4rem 0.8rem;
+border-radius: 6px;
+transition: background 0.2s;
+}
+nav a:hover, nav a.active { background: var(--accent); color: var(--surface); }
+main {
+flex: 1;
+max-width: 1000px;
+width: 100%;
+margin: 0 auto;
+padding: 1.5rem;
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 1.5rem;
+}
+@media (max-width: 768px) {
+main { grid-template-columns: 1fr; }
+}
+.panel {
+background: var(--surface);
+border: 1px solid var(--border);
+border-radius: 12px;
+padding: 1.5rem;
+}
+.panel h2 {
+font-size: 1.1rem;
+color: var(--accent);
+margin-bottom: 1rem;
+}
+label {
+display: block;
+font-size: 0.85rem;
+font-weight: 600;
+margin-bottom: 0.3rem;
+color: var(--text);
+}
+select, input[type="text"], textarea {
+width: 100%;
+padding: 0.6rem 0.8rem;
+border: 1px solid var(--border);
+border-radius: 8px;
+background: var(--bg);
+color: var(--text);
+font-family: inherit;
+font-size: 0.9rem;
+outline: none;
+margin-bottom: 1rem;
+}
+select:focus, input:focus, textarea:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 80px; }
+.file-upload {
+border: 2px dashed var(--border);
+border-radius: 10px;
+padding: 1.5rem;
+text-align: center;
+cursor: pointer;
+transition: border-color 0.2s;
+margin-bottom: 1rem;
+position: relative;
+}
+.file-upload:hover { border-color: var(--accent); }
+.file-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.file-upload .icon { font-size: 2rem; margin-bottom: 0.5rem; }
+.file-upload .hint { font-size: 0.8rem; color: var(--text-muted); }
+.file-preview {
+max-width: 100%;
+max-height: 150px;
+border-radius: 8px;
+margin-bottom: 1rem;
+display: none;
+}
+button {
+width: 100%;
+background: var(--accent);
+color: var(--surface);
+border: none;
+border-radius: 10px;
+padding: 0.8rem;
+font-size: 0.95rem;
+font-weight: 700;
+cursor: pointer;
+transition: background 0.2s;
+}
+button:hover:not(:disabled) { background: var(--accent-hover); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.status-bar {
+margin-top: 1rem;
+padding: 0.7rem 1rem;
+border-radius: 8px;
+font-size: 0.85rem;
+display: none;
+align-items: center;
+gap: 0.5rem;
+}
+.status-bar.info { background: #e3f2fd; color: #1565c0; display: flex; }
+.status-bar.success { background: #e8f5e9; color: var(--success); display: flex; }
+.status-bar.error { background: #fbe9e7; color: var(--error); display: flex; }
+.progress-track {
+width: 100%;
+height: 6px;
+background: var(--border);
+border-radius: 3px;
+margin-top: 0.5rem;
+overflow: hidden;
+display: none;
+}
+.progress-fill {
+height: 100%;
+background: var(--accent);
+border-radius: 3px;
+width: 0%;
+transition: width 0.3s;
+}
+.viewer-container {
+width: 100%;
+height: 400px;
+border-radius: 12px;
+overflow: hidden;
+background: #1a1a1a;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+model-viewer {
+width: 100%;
+height: 100%;
+--poster-color: transparent;
+}
+.viewer-placeholder {
+color: #999;
+font-size: 0.9rem;
+text-align: center;
+padding: 2rem;
+}
+.backend-status {
+display: flex;
+gap: 0.5rem;
+flex-wrap: wrap;
+margin-bottom: 1rem;
+}
+.backend-tag {
+font-size: 0.75rem;
+padding: 0.2rem 0.6rem;
+border-radius: 4px;
+border: 1px solid var(--border);
+background: var(--bg);
+color: var(--text-muted);
+}
+.backend-tag.available { border-color: var(--success); color: var(--success); }
+.backend-tag.unavailable { opacity: 0.5; }
+footer {
+text-align: center;
+padding: 1.2rem;
+font-size: 0.75rem;
+color: var(--text-muted);
+border-top: 1px solid var(--border);
+}
+</style>
+</head>
+<body>
+<header>
+<h1>Gerador 3D com IA</h1>
+<p>Express'Arte Studio · Transforme imagens ou texto em modelos 3D</p>
+</header>
+<nav>
+<a href="/index.html">Início</a>
+<a href="/galeria.html">Galeria</a>
+<a href="/gerador-3d.html" class="active">Gerador 3D</a>
+<a href="/rk10.html">RK10 IA</a>
+</nav>
+<main>
+<div class="panel">
+<h2>Configuração</h2>
+<label for="backendSelect">Backend de Geração:</label>
+<select id="backendSelect">
+<option value="hunyuan">Hunyuan3D-2 (Tencent) — Texto/Imagem → GLB</option>
+<option value="pixal3d">Pixal3D Pipeline — Imagem → GLB (lote)</option>
+<option value="trellis">TRELLIS (Microsoft) — Imagem/Texto → GLB</option>
+</select>
+<div class="backend-status" id="backendStatus"></div>
+<label for="promptInput">Prompt (texto para gerar):</label>
+<textarea id="promptInput" placeholder="Ex: uma estátua barroca de anjo com asas detalhadas..."></textarea>
+<label>OU envie uma imagem de referência:</label>
+<div class="file-upload" id="dropZone">
+<input type="file" id="imageInput" accept="image/png,image/jpeg,image/webp">
+<div class="icon">📷</div>
+<div class="hint">Clique ou arraste uma imagem aqui</div>
+</div>
+<img id="imagePreview" class="file-preview" alt="Preview">
+<button id="generateBtn" disabled>Gerar Modelo 3D</button>
+<div class="status-bar" id="statusBar"></div>
+<div class="progress-track" id="progressTrack">
+<div class="progress-fill" id="progressFill"></div>
+</div>
+</div>
+<div class="panel">
+<h2>Visualizador 3D</h2>
+<div class="viewer-container" id="viewerContainer">
+<div class="viewer-placeholder" id="viewerPlaceholder">
+O modelo gerado aparecerá aqui.<br>Use o mouse para rotacionar, zoom e pan.
+</div>
+<model-viewer id="modelViewer" style="display:none;"
+camera-controls
+auto-rotate
+shadow-intensity="1"
+environment-image="neutral"
+alt="Modelo 3D gerado por IA">
+</model-viewer>
+</div>
+<div id="downloadArea" style="margin-top:1rem;display:none;">
+<button id="downloadBtn" style="background:var(--success);">⬇ Baixar Modelo .GLB</button>
+</div>
+</div>
+</main>
+<footer>
+Express'Arte Studio V7.9 · Gerador 3D com IA · Os backends rodam localmente no seu PC
+</footer>
+<script>
+(function() {
+'use strict';
+const API_BASE = window.location.origin;
+const generateBtn = document.getElementById('generateBtn');
+const backendSelect = document.getElementById('backendSelect');
+const promptInput = document.getElementById('promptInput');
+const imageInput = document.getElementById('imageInput');
+const imagePreview = document.getElementById('imagePreview');
+const statusBar = document.getElementById('statusBar');
+const progressTrack = document.getElementById('progressTrack');
+const progressFill = document.getElementById('progressFill');
+const modelViewer = document.getElementById('modelViewer');
+const viewerPlaceholder = document.getElementById('viewerPlaceholder');
+const downloadArea = document.getElementById('downloadArea');
+const downloadBtn = document.getElementById('downloadBtn');
+const backendStatusDiv = document.getElementById('backendStatus');
+let selectedImageBase64 = null;
+let currentJobUid = null;
+let pollInterval = null;
+// --- Backend status check ---
+async function checkBackends() {
+try {
+const resp = await fetch(API_BASE + '/api/ai3d/status');
+if (!resp.ok) return;
+const data = await resp.json();
+const backends = data.backends || [];
+backendStatusDiv.innerHTML = '';
+backends.forEach(function(b) {
+const tag = document.createElement('span');
+tag.className = 'backend-tag ' + (b.available ? 'available' : 'unavailable');
+tag.textContent = b.name + (b.available ? ' ✓' : ' ✗');
+backendStatusDiv.appendChild(tag);
+});
+updateGenerateButton();
+} catch(e) {
+backendStatusDiv.innerHTML = '<span class="backend-tag unavailable">Servidor offline</span>';
+}
+}
+// --- Image handling ---
+imageInput.addEventListener('change', function(e) {
+const file = e.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = function(ev) {
+selectedImageBase64 = ev.target.result.split(',')[1];
+imagePreview.src = ev.target.result;
+imagePreview.style.display = 'block';
+updateGenerateButton();
+};
+reader.readAsDataURL(file);
+});
+promptInput.addEventListener('input', updateGenerateButton);
+backendSelect.addEventListener('change', updateGenerateButton);
+function updateGenerateButton() {
+const hasPrompt = promptInput.value.trim().length > 0;
+const hasImage = selectedImageBase64 !== null;
+generateBtn.disabled = !(hasPrompt || hasImage);
+}
+// --- Status display helpers ---
+function showStatus(msg, type) {
+statusBar.className = 'status-bar ' + type;
+statusBar.textContent = msg;
+}
+function hideStatus() {
+statusBar.className = 'status-bar';
+statusBar.style.display = 'none';
+}
+function setProgress(pct) {
+progressTrack.style.display = 'block';
+progressFill.style.width = pct + '%';
+}
+function hideProgress() {
+progressTrack.style.display = 'none';
+progressFill.style.width = '0%';
+}
+// --- Generation ---
+generateBtn.addEventListener('click', async function() {
+const backend = backendSelect.value;
+const prompt = promptInput.value.trim();
+generateBtn.disabled = true;
+hideStatus();
+hideProgress();
+downloadArea.style.display = 'none';
+modelViewer.style.display = 'none';
+viewerPlaceholder.style.display = 'block';
+viewerPlaceholder.textContent = 'Enviando job para ' + backend + '...';
+try {
+if (backend === 'hunyuan') {
+await submitHunyuan(prompt);
+} else if (backend === 'pixal3d') {
+await submitPixal3D();
+} else if (backend === 'trellis') {
+showStatus('TRELLIS: use a interface Gradio em http://127.0.0.1:7860 para gerar modelos.', 'info');
+generateBtn.disabled = false;
+}
+} catch(err) {
+showStatus('Erro: ' + err.message, 'error');
+generateBtn.disabled = false;
+}
+});
+async function submitHunyuan(prompt) {
+setProgress(10);
+showStatus('Enviando para Hunyuan3D-2...', 'info');
+const params = {};
+if (prompt) params.prompt = prompt;
+if (selectedImageBase64) params.image = selectedImageBase64;
+params.octree_resolution = 256;
+params.num_inference_steps = 20;
+params.guidance_scale = 7.5;
+const resp = await fetch(API_BASE + '/api/ai3d/hunyuan/submit', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify(params)
+});
+if (!resp.ok) {
+const err = await resp.text();
+throw new Error(err || 'HTTP ' + resp.status);
+}
+const data = await resp.json();
+currentJobUid = data.uid;
+setProgress(20);
+showStatus('Job enviado! UID: ' + currentJobUid + '. Aguardando geração...', 'info');
+startPolling(currentJobUid);
+}
+async function submitPixal3D() {
+if (!selectedImageBase64) {
+throw new Error('Pixal3D requer uma imagem. Faça upload acima.');
+}
+showStatus('Pixal3D: copie a imagem para a pasta inbox do pipeline.', 'info');
+setProgress(50);
+// For Pixal3D we need a file path; in a real setup the user would have
+// the image saved locally. Here we simulate by showing instructions.
+showStatus('Para usar Pixal3D: salve a imagem na pasta inbox do Pixal3D-pipeline/pipeline/inbox/. O watcher processará automaticamente.', 'info');
+setProgress(100);
+generateBtn.disabled = false;
+}
+function startPolling(uid) {
+let attempts = 0;
+const maxAttempts = 120; // 2 minutes at 1s interval
+pollInterval = setInterval(async function() {
+attempts++;
+const pct = Math.min(20 + (attempts / maxAttempts) * 70, 90);
+setProgress(pct);
+try {
+const resp = await fetch(API_BASE + '/api/ai3d/hunyuan/status/' + uid);
+if (!resp.ok) {
+// Still processing (404) or error
+if (resp.status === 404) {
+showStatus('Gerando modelo... (' + attempts + 's)', 'info');
+return;
+}
+clearInterval(pollInterval);
+showStatus('Erro ao consultar status: HTTP ' + resp.status, 'error');
+generateBtn.disabled = false;
+return;
+}
+const data = await resp.json();
+if (data.ready) {
+clearInterval(pollInterval);
+setProgress(100);
+showStatus('Modelo gerado com sucesso!', 'success');
+loadModel(data.file_path);
+generateBtn.disabled = false;
+} else {
+showStatus('Gerando modelo... (' + attempts + 's)', 'info');
+}
+} catch(err) {
+clearInterval(pollInterval);
+showStatus('Erro de conexão: ' + err.message, 'error');
+generateBtn.disabled = false;
+}
+if (attempts >= maxAttempts) {
+clearInterval(pollInterval);
+showStatus('Timeout: a geração demorou mais que 2 minutos. Verifique o backend.', 'error');
+generateBtn.disabled = false;
+}
+}, 1000);
+}
+function loadModel(filePath) {
+// The file_path from Hunyuan is a local server path.
+// We construct a URL to serve it via the local server.
+const modelUrl = API_BASE + '/api/ai3d/file?path=' + encodeURIComponent(filePath);
+viewerPlaceholder.style.display = 'none';
+modelViewer.style.display = 'block';
+modelViewer.src = modelUrl;
+downloadArea.style.display = 'block';
+downloadBtn.onclick = function() {
+const a = document.createElement('a');
+a.href = modelUrl;
+a.download = 'modelo-3d-gerado.glb';
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+};
+}
+// --- Init ---
+checkBackends();
+})();
+</script>
+</body>
+</html>
